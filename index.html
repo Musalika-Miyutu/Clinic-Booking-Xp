@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic Care - Login & Register</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Left Side: Welcome Branding -->
+        <div class="auth-sidebar">
+            <h2>ClinicCare</h2>
+            <p>Your health, scheduled seamlessly. Book appointments with top doctors in just a few clicks.</p>
+        </div>
+
+        <!-- Right Side: Forms Box -->
+        <div class="auth-form-box">
+            <!-- Login Form -->
+            <div class="form-container" id="loginForm">
+                <h3>Welcome Back</h3>
+                <p class="subtitle">Please enter your details to sign in</p>
+                
+                <form action="handlers/login.php" method="POST">
+                    <div class="input-group">
+                        <label for="login-email">Email Address</label>
+                        <input type="email" id="login-email" name="email" required placeholder="name@example.com">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" name="password" required placeholder="••••••••">
+                    </div>
+                    
+                    <button type="submit" class="btn-primary">Sign In</button>
+                </form>
+                <p class="switch-form">Don't have an account? <a href="#" id="toRegister">Sign up for free</a></p>
+            </div>
+
+            <!-- Registration Form (Hidden by default via CSS) -->
+            <div class="form-container hidden" id="registerForm">
+                <h3>Create an Account</h3>
+                <p class="subtitle">Join us to start managing your appointments</p>
+                
+                <form action="handlers/register.php" method="POST">
+                    <div class="input-group">
+                        <label for="reg-name">Full Name</label>
+                        <input type="text" id="reg-name" name="name" required placeholder="John Doe">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="reg-email">Email Address</label>
+                        <input type="email" id="reg-email" name="email" required placeholder="name@example.com">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="reg-password">Password</label>
+                        <input type="password" id="reg-password" name="password" required placeholder="Minimum 8 characters">
+                    </div>
+                    
+                    <button type="submit" class="btn-primary">Register</button>
+                </form>
+                <p class="switch-form">Already have an account? <a href="#" id="toLogin">Sign in</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/auth.js"></script>
+</body>
+</html>

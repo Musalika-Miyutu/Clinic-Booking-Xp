@@ -1,0 +1,233 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f8fafc;
+    color: #334155;
+}
+
+.dashboard-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    width: 260px;
+    background-color: #0f172a;
+    color: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    padding: 30px 20px;
+}
+
+.logo-area h2 {
+    color: #38bdf8;
+    font-size: 1.8rem;
+    margin-bottom: 40px;
+}
+
+.nav-links {
+    flex: 1;
+}
+
+.nav-links a {
+    display: block;
+    color: #94a3b8;
+    text-decoration: none;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.nav-links a:hover, .nav-links a.active {
+    background-color: #1e293b;
+    color: #f8fafc;
+}
+
+.sidebar-footer {
+    border-top: 1px solid #334155;
+    padding-top: 20px;
+    font-size: 0.9rem;
+}
+
+.sidebar-footer p {
+    color: #94a3b8;
+    margin-bottom: 15px;
+}
+
+.btn-logout {
+    display: block;
+    text-align: center;
+    background-color: #ef4444;
+    color: white;
+    text-decoration: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+/* Main Content Styling */
+.main-content {
+    flex: 1;
+    padding: 40px;
+    overflow-y: auto;
+}
+
+.content-header {
+    margin-bottom: 35px;
+}
+
+.content-header h1 {
+    font-size: 2.2rem;
+    color: #1e293b;
+    margin-bottom: 6px;
+}
+
+.content-header p {
+    color: #64748b;
+}
+
+/* Dashboard Interactive Layout Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 30px;
+}
+
+h3 {
+    font-size: 1.3rem;
+    color: #1e293b;
+    margin-bottom: 15px;
+}
+
+/* Doctor Selection Cards */
+.doctors-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.doctor-card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.doctor-card:hover {
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+}
+
+.doctor-card.active-card {
+    border-color: #0284c7;
+    background-color: #f0f9ff;
+}
+
+.doctor-card h4 {
+    font-size: 1.15rem;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.badge {
+    display: inline-block;
+    background-color: #e0f2fe;
+    color: #0369a1;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.doctor-card p {
+    font-size: 0.9rem;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+/* Booking Panel Styling */
+.booking-box {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 8px;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 1rem;
+    color: #334155;
+    background-color: white;
+}
+
+.disabled-input {
+    background-color: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
+    font-weight: 600;
+    color: #0369a1 !important;
+}
+
+.btn-submit-booking {
+    width: 100%;
+    padding: 14px;
+    background-color: #0284c7;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-submit-booking:hover {
+    background-color: #0369a1;
+}
+
+/* Responsive breakpoint */
+@media (max-width: 992px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Utility tabs visibility control */
+.tab-content {
+    animation: fadeIn 0.3s ease;
+}
+
+.hidden-panel {
+    display: none !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}

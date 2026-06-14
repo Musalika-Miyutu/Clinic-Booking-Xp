@@ -8,6 +8,21 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     exit();
 }
 
+//1. Fetch Total Bookings Count
+$totalQuery = "SELECT COUNT(*) as total FROM appointments";
+$totalResult = $conn->query($totalQuery);
+$totalBookings = ($totalResult) ? $totalResult->fetch_assoc()['total'] : 0;
+
+// 2. Fetch Pending Approvals Count
+$pendingQuery = "SELECT COUNT(*) as pending FROM appointments WHERE status = 'pending'";
+$pendingResult = $conn->query($pendingQuery);
+$pendingApprovals = ($pendingResult) ? $pendingResult->fetch_assoc()['pending'] : 0;
+
+// 3. Fetch Active Specialists Count
+$doctorsQuery = "SELECT COUNT(*) as total_docs FROM doctors";
+$doctorsResult = $conn->query($doctorsQuery);
+$activeDoctors = ($doctorsResult) ? $doctorsResult->fetch_assoc()['total_docs'] : 0;
+
 // 1. Fetch appointments for Tab 1
 $adminQuery = "SELECT 
                 appointments.id AS appointment_id,
@@ -74,6 +89,69 @@ $patientsResult = $conn->query($patientsQuery);
         tr:hover {
             background-color: #f8fafc;
         }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card-metric {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .metric-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .metric-details h3 {
+            font-size: 1.75rem;
+            margin: 0;
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        .metric-details p {
+            margin: 4px 0 0 0;
+            color: #64748b;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .btn-action {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-confirm {
+            background-color: #22c55e;
+            color: white;
+        }
+
+        .btn-confirm:hover { background-color: #16a34a; }
+        .btn-cancel {
+            background-color: #ef4444;
+            color: white;
+        }
+        .btn-cancel:hover { background-color: #dc2626; }
 
         .status-badge {
             display: inline-block;
@@ -120,6 +198,32 @@ $patientsResult = $conn->query($patientsQuery);
                 <p>Review metrics, update staff lists, and monitor medical appointments.</p>
             </header>
 
+            <div class="metrics-grid">
+                <div class="card-metric">
+                    <div class="metric-icon" style="background: #e0f2fe; color: #0284c7;">📅</div>
+                    <div class="metric-details">
+                        <h3><?php echo $totalBookings; ?></h3>
+                        <p>Total Bookings</p>
+                    </div>
+            </div>
+
+            <div class="card-metric">
+                <div class="metric-icon" style="background: #fef3c7; color: #d97706;">⏳</div>
+                <div class="metric-details">
+                    <h3 id="stat-pending"><?php echo $pendingApprovals; ?></h3>
+                    <p>Pending Approvals</p>
+                </div>
+            </div>
+
+            <div class="card-metric">
+                <div class="metric-icon" style="background: #dcfce7; color: #16a34a;">🩺</div>
+                <div class="metric-details">
+                    <h3><?php echo $activeDoctors; ?></h3>
+                    <p>Active Specialists</p>
+                </div>
+            </div>
+         </div>
+
             <div id="schedule-section" class="tab-content">
                 <div class="table-container">
                     <h3>Scheduled Appointments</h3>
@@ -133,29 +237,44 @@ $patientsResult = $conn->query($patientsQuery);
                                 <th>Date</th>
                                 <th>Time</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php
-                            if ($appointmentsResult && $appointmentsResult->num_rows > 0) {
-                                while ($row = $appointmentsResult->fetch_assoc()) {
-                                    $formattedTime = date("g:i A", strtotime($row['appointment_time']));
-                                    $formattedDate = date("F j, Y", strtotime($row['appointment_date']));
-                                    
-                                    echo "<tr>";
-                                    echo "<td>" . $row['appointment_id'] . "</td>";
-                                    echo "<td><strong>" . htmlspecialchars($row['patient_name']) . "</strong></td>";
-                                    echo "<td>" . htmlspecialchars($row['patient_email']) . "</td>";
-                                    echo "<td>" . htmlspecialchars($row['doctor_name']) . "</td>";
-                                    echo "<td>" . $formattedDate . "</td>";
-                                    echo "<td>" . $formattedTime . "</td>";
-                                    echo "<td><span class='status-badge status-" . $row['status'] . "'>" . $row['status'] . "</span></td>";
-                                    echo "</tr>";
-                                }
-                            } else {
-                                echo "<tr><td colspan='7' style='text-align:center; color:#64748b;'>No appointments scheduled at this time.</td></tr>";
-                            }
-                            ?>
+                           <?php
+                           if ($appointmentsResult && $appointmentsResult->num_rows > 0) {
+                              while ($row = $appointmentsResult->fetch_assoc()) {
+                                 $formattedTime = date("g:i A", strtotime($row['appointment_time']));
+                                 $formattedDate = date("F j, Y", strtotime($row['appointment_date']));
+                                 $appId = $row['appointment_id'];
+            
+                                 echo "<tr id='row-$appId'>";
+                                 echo "<td>" . $appId . "</td>";
+                                 echo "<td><strong>" . htmlspecialchars($row['patient_name']) . "</strong></td>";
+                                 echo "<td>" . htmlspecialchars($row['patient_email']) . "</td>";
+                                 echo "<td>" . htmlspecialchars($row['doctor_name']) . "</td>";
+                                 echo "<td>" . $formattedDate . "</td>";
+                                 echo "<td>" . $formattedTime . "</td>";
+                                 // The unique ID here allows JavaScript to find and rewrite this badge text instantly
+                                 echo "<td><span id='status-badge-$appId' class='status-badge status-" . $row['status'] . "'>" . $row['status'] . "</span></td>";
+            
+                                 echo "<td>";
+                                 // Only display buttons if the status is currently pending
+                                 if ($row['status'] === 'pending') {
+                                     echo "<div id='actions-$appId' style='display:flex; gap:8px;'>";
+                                     echo "<button class='btn-action btn-confirm' onclick='updateStatus($appId, \"confirmed\")'>Confirm</button>";
+                                     echo "<button class='btn-action btn-cancel' onclick='updateStatus($appId, \"cancelled\")'>Cancel</button>";
+                                     echo "</div>";
+                                 } else {
+                                     echo "<span style='color:#94a3b8; font-size:0.85rem; font-style:italic;'>Processed</span>";
+                                 }
+                                 echo "</td>";
+                                 echo "</tr>";
+                               }
+                           } else {
+                               echo "<tr><td colspan='8' style='text-align:center; color:#64748b;'>No appointments scheduled at this time.</td></tr>";
+                           }
+                           ?>
                         </tbody>
                     </table>
                 </div>
@@ -228,7 +347,59 @@ $patientsResult = $conn->query($patientsQuery);
         </main>
     </div>
 
-    <script src="assets/js/admin-dashboard.js"></script>
+    <script>
+    // Tab switching engine
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(panel => panel.classList.add('hidden-panel'));
+            const targetId = this.getAttribute('data-target');
+            document.getElementById(targetId).classList.remove('hidden-panel');
+        });
+    });
+
+    // AJAX database status updater
+    function updateStatus(appointmentId, newStatus) {
+        const formData = new FormData();
+        formData.append('appointment_id', appointmentId);
+        formData.append('status', newStatus);
+
+        fetch('handlers/update-status.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const badge = document.getElementById(`status-badge-${appointmentId}`);
+                badge.innerText = newStatus;
+                badge.className = `status-badge status-${newStatus}`;
+                
+                // Automatically decrement the pending counter badge on-screen
+                const pendingStatCard = document.getElementById('stat-pending');
+                if (pendingStatCard) {
+                    let currentPendingCount = parseInt(pendingStatCard.innerText);
+                    if (currentPendingCount > 0) {
+                        pendingStatCard.innerText = currentPendingCount - 1;
+                    }
+                }
+
+                const actionsContainer = document.getElementById(`actions-${appointmentId}`);
+                if (actionsContainer) {
+                    actionsContainer.parentElement.innerHTML = "<span style='color:#94a3b8; font-size:0.85rem; font-style:italic;'>Processed</span>";
+                }
+            } else {
+                alert('Error updating status: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('AJAX Error:', error);
+            alert('An unexpected error occurred connection-wise.');
+        });
+    }
+    </script>
 </body>
 </html>
 <?php $conn->close(); ?>

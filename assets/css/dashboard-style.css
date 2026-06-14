@@ -207,6 +207,21 @@ h3 {
     transition: background-color 0.2s;
 }
 
+.btn-patient-cancel {
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-patient-cancel:hover {
+    background-color: #dc2626;
+}
+
 .btn-submit-booking:hover {
     background-color: #0369a1;
 }

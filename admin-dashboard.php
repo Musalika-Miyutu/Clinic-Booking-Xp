@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     exit();
 }
 
-//1. Fetch Total Bookings Count
+// 1. Fetch Total Bookings Count
 $totalQuery = "SELECT COUNT(*) as total FROM appointments";
 $totalResult = $conn->query($totalQuery);
 $totalBookings = ($totalResult) ? $totalResult->fetch_assoc()['total'] : 0;
@@ -37,14 +37,6 @@ $adminQuery = "SELECT
                INNER JOIN doctors ON appointments.doctor_id = doctors.id
                ORDER BY appointments.appointment_date ASC, appointments.appointment_time ASC";
 $appointmentsResult = $conn->query($adminQuery);
-
-// 2. Fetch doctors for Tab 2
-$doctorsQuery = "SELECT id, name, specialization, bio FROM doctors";
-$doctorsResult = $conn->query($doctorsQuery);
-
-// 3. Fetch patients for Tab 3
-$patientsQuery = "SELECT id, name, email, created_at FROM users WHERE role = 'patient' ORDER BY created_at DESC";
-$patientsResult = $conn->query($patientsQuery);
 ?>
 
 <!DOCTYPE html>
@@ -166,6 +158,41 @@ $patientsResult = $conn->query($patientsQuery);
         .status-confirmed { background-color: #dcfce7; color: #16a34a; }
         .status-cancelled { background-color: #fee2e2; color: #dc2626; }
 
+        /* Form styling helper */
+        .booking-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #334155;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .btn-submit-booking {
+            width: 100%;
+            padding: 12px;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
         /* Tabs styling */
         .tab-content { animation: fadeIn 0.3s ease; }
         .hidden-panel { display: none !important; }
@@ -182,9 +209,9 @@ $patientsResult = $conn->query($patientsQuery);
                 <h2>ClinicCare</h2>
             </div>
             <nav class="nav-links">
-                <a href="#" class="nav-tab active" data-target="schedule-section">Master Schedule</a>
+                <a href="#" class="nav-tab active" data-target="appointments-section">Master Schedule</a>
                 <a href="#" class="nav-tab" data-target="doctors-section">Manage Doctors</a>
-                <a href="#" class="nav-tab" data-target="patients-section">Patient Records</a>
+                <a href="#" class="nav-tab" data-target="patients-section">Manage Patients</a>
             </nav>
             <div class="sidebar-footer">
                 <p>Role: <strong>Administrator</strong></p>
@@ -205,26 +232,26 @@ $patientsResult = $conn->query($patientsQuery);
                         <h3><?php echo $totalBookings; ?></h3>
                         <p>Total Bookings</p>
                     </div>
-            </div>
+                </div>
 
-            <div class="card-metric">
-                <div class="metric-icon" style="background: #fef3c7; color: #d97706;">⏳</div>
-                <div class="metric-details">
-                    <h3 id="stat-pending"><?php echo $pendingApprovals; ?></h3>
-                    <p>Pending Approvals</p>
+                <div class="card-metric">
+                    <div class="metric-icon" style="background: #fef3c7; color: #d97706;">⏳</div>
+                    <div class="metric-details">
+                        <h3 id="stat-pending"><?php echo $pendingApprovals; ?></h3>
+                        <p>Pending Approvals</p>
+                    </div>
+                </div>
+
+                <div class="card-metric">
+                    <div class="metric-icon" style="background: #dcfce7; color: #16a34a;">🩺</div>
+                    <div class="metric-details">
+                        <h3><?php echo $activeDoctors; ?></h3>
+                        <p>Active Specialists</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="card-metric">
-                <div class="metric-icon" style="background: #dcfce7; color: #16a34a;">🩺</div>
-                <div class="metric-details">
-                    <h3><?php echo $activeDoctors; ?></h3>
-                    <p>Active Specialists</p>
-                </div>
-            </div>
-         </div>
-
-            <div id="schedule-section" class="tab-content">
+            <div id="appointments-section" class="tab-content">
                 <div class="table-container">
                     <h3>Scheduled Appointments</h3>
                     <table>
@@ -255,11 +282,9 @@ $patientsResult = $conn->query($patientsQuery);
                                  echo "<td>" . htmlspecialchars($row['doctor_name']) . "</td>";
                                  echo "<td>" . $formattedDate . "</td>";
                                  echo "<td>" . $formattedTime . "</td>";
-                                 // The unique ID here allows JavaScript to find and rewrite this badge text instantly
                                  echo "<td><span id='status-badge-$appId' class='status-badge status-" . $row['status'] . "'>" . $row['status'] . "</span></td>";
             
                                  echo "<td>";
-                                 // Only display buttons if the status is currently pending
                                  if ($row['status'] === 'pending') {
                                      echo "<div id='actions-$appId' style='display:flex; gap:8px;'>";
                                      echo "<button class='btn-action btn-confirm' onclick='updateStatus($appId, \"confirmed\")'>Confirm</button>";
@@ -270,7 +295,7 @@ $patientsResult = $conn->query($patientsQuery);
                                  }
                                  echo "</td>";
                                  echo "</tr>";
-                               }
+                              }
                            } else {
                                echo "<tr><td colspan='8' style='text-align:center; color:#64748b;'>No appointments scheduled at this time.</td></tr>";
                            }
@@ -281,69 +306,116 @@ $patientsResult = $conn->query($patientsQuery);
             </div>
 
             <div id="doctors-section" class="tab-content hidden-panel">
-                <div class="table-container">
-                    <h3>Registered Clinic Specialists</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Doctor Name</th>
-                                <th>Specialization</th>
-                                <th>Biography / Profile</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            if ($doctorsResult && $doctorsResult->num_rows > 0) {
-                                while ($doc = $doctorsResult->fetch_assoc()) {
-                                    echo "<tr>";
-                                    echo "<td>" . $doc['id'] . "</td>";
-                                    echo "<td><strong>" . htmlspecialchars($doc['name']) . "</strong></td>";
-                                    echo "<td><span class='badge' style='background:#e0f2fe; color:#0369a1; padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:600;'>" . htmlspecialchars($doc['specialization']) . "</span></td>";
-                                    echo "<td style='color:#64748b; font-size:0.9rem; max-width:400px;'>" . htmlspecialchars($doc['bio']) . "</td>";
-                                    echo "</tr>";
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px; align-items: start; margin-top: 20px;">
+                    
+                    <div class="booking-box">
+                        <h3>Register New Specialist</h3>
+                        <form action="handlers/add-doctor.php" method="POST">
+                            <div class="form-group">
+                                <label>Doctor Full Name</label>
+                                <input type="text" name="name" required placeholder="e.g. Dr. Jane Phiri">
+                            </div>
+                            <div class="form-group">
+                                <label>Medical Specialization</label>
+                                <input type="text" name="specialization" required placeholder="e.g. Cardiologist">
+                            </div>
+                            <div class="form-group">
+                                <label>Professional Biography Summary</label>
+                                <textarea name="bio" rows="4" placeholder="Brief summary of experience..." style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1; font-family:inherit; box-sizing:border-box;"></textarea>
+                            </div>
+                            <button type="submit" class="btn-submit-booking" style="background:#10b981; margin-top:10px;">Add Doctor</button>
+                        </form>
+                    </div>
+
+                    <div class="table-container" style="margin-top:0;">
+                        <h3>Registered Clinic Specialists</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Doctor Name</th>
+                                    <th>Specialization</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $docFetch = $conn->query("SELECT id, name, specialization FROM doctors ORDER BY id DESC");
+                                if ($docFetch && $docFetch->num_rows > 0) {
+                                    while ($dRow = $docFetch->fetch_assoc()) {
+                                        $dId = $dRow['id'];
+                                        echo "<tr id='doc-row-$dId'>";
+                                        echo "<td>" . $dId . "</td>";
+                                        echo "<td><strong>" . htmlspecialchars($dRow['name']) . "</strong></td>";
+                                        echo "<td><span style='background:#e0f2fe; color:#0369a1; padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:600;'>" . htmlspecialchars($dRow['specialization']) . "</span></td>";
+                                        echo "<td><button onclick='removeDoctor($dId)' class='btn-action btn-cancel' style='padding:4px 8px;'>Remove</button></td>";
+                                        echo "</tr>";
+                                    }
+                                } else {
+                                    echo "<tr><td colspan='4' style='text-align:center; color:#64748b;'>No doctors registered in the system database.</td></tr>";
                                 }
-                            } else {
-                                echo "<tr><td colspan='4' style='text-align:center;'>No doctors registered in the system database.</td></tr>";
-                            }
-                            ?>
-                        </tbody>
-                    </table>
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <div id="patients-section" class="tab-content hidden-panel">
-                <div class="table-container">
-                    <h3>Registered Patient Database</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>User ID</th>
-                                <th>Patient Name</th>
-                                <th>Email Address</th>
-                                <th>Registration Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            if ($patientsResult && $patientsResult->num_rows > 0) {
-                                while ($pat = $patientsResult->fetch_assoc()) {
-                                    echo "<tr>";
-                                    echo "<td>" . $pat['id'] . "</td>";
-                                    echo "<td><strong>" . htmlspecialchars($pat['name']) . "</strong></td>";
-                                    echo "<td>" . htmlspecialchars($pat['email']) . "</td>";
-                                    echo "<td>" . date("F j, Y, g:i A", strtotime($pat['created_at'])) . "</td>";
-                                    echo "</tr>";
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px; align-items: start; margin-top: 20px;">
+                    
+                    <div class="booking-box">
+                        <h3>Register New Patient</h3>
+                        <form action="handlers/add-patient.php" method="POST">
+                            <div class="form-group">
+                                <label>Full Patient Name</label>
+                                <input type="text" name="name" required placeholder="Full Name">
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" name="email" required placeholder="email@domain.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Temporary Account Password</label>
+                                <input type="password" name="password" required placeholder="••••••••">
+                            </div>
+                            <button type="submit" class="btn-submit-booking" style="background:#10b981; margin-top:10px;">Create Account</button>
+                        </form>
+                    </div>
+
+                    <div class="table-container" style="margin-top:0;">
+                        <h3>Registered Patient Database</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Patient Name</th>
+                                    <th>Email Address</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $patFetch = $conn->query("SELECT id, name, email FROM users WHERE role = 'patient' ORDER BY id DESC");
+                                if ($patFetch && $patFetch->num_rows > 0) {
+                                    while ($pRow = $patFetch->fetch_assoc()) {
+                                        $pId = $pRow['id'];
+                                        echo "<tr id='pat-row-$pId'>";
+                                        echo "<td>" . $pId . "</td>";
+                                        echo "<td><strong>" . htmlspecialchars($pRow['name']) . "</strong></td>";
+                                        echo "<td>" . htmlspecialchars($pRow['email']) . "</td>";
+                                        echo "<td><button onclick='removePatient($pId)' class='btn-action btn-cancel' style='padding:4px 8px;'>Remove</button></td>";
+                                        echo "</tr>";
+                                    }
+                                } else {
+                                    echo "<tr><td colspan='4' style='text-align:center; color:#64748b;'>No patients registered yet.</td></tr>";
                                 }
-                            } else {
-                                echo "<tr><td colspan='4' style='text-align:center;'>No patients registered yet.</td></tr>";
-                            }
-                            ?>
-                        </tbody>
-                    </table>
+                                ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-
         </main>
     </div>
 
@@ -377,7 +449,6 @@ $patientsResult = $conn->query($patientsQuery);
                 badge.innerText = newStatus;
                 badge.className = `status-badge status-${newStatus}`;
                 
-                // Automatically decrement the pending counter badge on-screen
                 const pendingStatCard = document.getElementById('stat-pending');
                 if (pendingStatCard) {
                     let currentPendingCount = parseInt(pendingStatCard.innerText);
@@ -397,6 +468,40 @@ $patientsResult = $conn->query($patientsQuery);
         .catch(error => {
             console.error('AJAX Error:', error);
             alert('An unexpected error occurred connection-wise.');
+        });
+    }
+
+    function removeDoctor(doctorId) {
+        if (!confirm("Are you sure you want to permanently remove this specialist profile from clinical rosters?")) return;
+
+        const fd = new FormData();
+        fd.append('doctor_id', doctorId);
+
+        fetch('handlers/delete-doctor.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById(`doc-row-${doctorId}`).remove();
+            } else {
+                alert("Execution Denied: " + data.message);
+            }
+        });
+    }
+
+    function removePatient(patientId) {
+        if (!confirm("Are you sure you want to completely drop this patient portfolio and wipe credentials?")) return;
+
+        const fd = new FormData();
+        fd.append('patient_id', patientId);
+
+        fetch('handlers/delete-patient.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById(`pat-row-${patientId}`).remove();
+            } else {
+                alert("Execution Denied: " + data.message);
+            }
         });
     }
     </script>
